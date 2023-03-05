@@ -1,5 +1,5 @@
 import numpy as np
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, make_response
 from flask_cors import CORS
 
 app = Flask(__name__, template_folder='../frontend/')
@@ -75,7 +75,7 @@ class Snake:
         return self.snake_body_coordinates[0]
 
     def get_snake_tail_coordinates(self):
-        return self.snake_body_coordinates[len(self.snake_body_coordinates) - 1]
+        return self.snake_body_coordinates[-1]
 
     def is_apple(self, box: "tuple[int, int]"):
         return self.game_grid[box[0], box[1]] == APPLE
@@ -116,8 +116,10 @@ class Snake:
             or new_box[1] < 0
             or new_box[1] >= width
         )
+        if is_box_out_of_range:
+            return False
         is_box_snake: bool = self.game_grid[new_box[0], new_box[1]] == SNAKE
-        if is_box_out_of_range or is_box_snake:
+        if is_box_snake:
             return False
         return True
 
@@ -168,10 +170,22 @@ class Snake:
 
 @app.route("/size", methods=["POST"])
 def update_size():
+    """
+    Updates the size of the grid and the number of apples if the input is valid
+    
+    Returns:
+        string: returns a string to confirm the update
+    """
     global height, width, number_of_apples
-    height = int(request.form["height"])
-    width = int(request.form["width"])
-    number_of_apples = int(request.form["apples"])
+    local_height = int(request.form["height"])
+    if local_height > 0:
+        height = local_height
+    local_width = int(request.form["width"])
+    if local_width > 0:
+        width = local_width
+    local_number_of_apples = int(request.form["apples"])
+    if local_number_of_apples > 0:
+        number_of_apples = local_number_of_apples
     return "Size updated"
 
 
@@ -205,8 +219,12 @@ def send_status_object():
 
 @app.route("/", methods=["GET"])
 def index():
-    return render_template("index.html")
+    response = make_response(render_template("index.html"))
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 
 if __name__ == "__main__":
     app.run("localhost", 7000)
+
+

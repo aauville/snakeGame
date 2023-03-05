@@ -2,7 +2,8 @@
 
 <head>
   <style>
-    /* Définir la taille et la couleur de fond des carrés */
+
+    /* Defines the square visual settings */
     .square {
       width: 50px;
       height: 50px;
@@ -13,18 +14,17 @@
       padding: 0;
     }
 
-    /* Définir la couleur de fond des carrés colorés */
+    /* Defines the different colors for the squares */
     .apple {
       background-color: red;
     }
-
     .snake {
       background-color: green;
     }
-
     .empty {
       background-color: black;
     }
+
   </style>
 </head>
 
@@ -50,57 +50,17 @@
 
   <script>
 
-    var n = 10; // number of columns
-    var m = 10; // number of ligns
-    var xhr = null;
-    var gridContainer = document.getElementById('grid-container');
-    var win = 0;
-    var lost = 0;
-    var intervalID=0;
+    let xhr = null; //request object
+    let gridContainer = document.getElementById('grid-container');
+    let isGameWon = 0;
+    let isGameLost = 0; 
+    let intervalID=0; 
 
-
-    function initGrid() {
-      var height = document.getElementById("height").value == "" ? 10 : parseInt(document.getElementById("height").value);
-      var width = document.getElementById("width").value == "" ? 10 : parseInt(document.getElementById("width").value);
-      var apples = document.getElementById("width").value == "" ? 1 : parseInt(document.getElementById("apples").value);
-
-      gridContainer.innerHTML = ''; //clean all previous content
-
-      for (var i = 0; i < height; i++) {
-        var row = document.createElement('div');
-        row.style.lineHeight = '0';
-        for (var j = 0; j < width; j++) {
-          var square = document.createElement('div');
-          square.className = 'square';
-          square.setAttribute('id', 'square-' + i + '-' + j);
-          row.appendChild(square);
-        }
-        gridContainer.appendChild(row);
-      }
-      sendParams(height, width, apples);
-    }
-
-    initGrid(); //init the grid so that it appears when the page is loaded
-
-    // Changer la couleur d'un carré en utilisant sa classe CSS
-    function setSquareColor(row, col, color) {
-      var squareId = 'square-' + row + '-' + col;
-      var square = document.getElementById(squareId);
-      square.className = 'square ' + color;
-    }
-
-    //returns the request object if it exists, creates it if not
-    getXmlHttpRequestObject = function () {
-      if (!xhr) {
-        // Create a new XMLHttpRequest object 
-        xhr = new XMLHttpRequest();
-      }
-      return xhr;
-    };
-
-
-    //add event listener for the key controls
     document.addEventListener('keydown', function (event) {
+      /**
+       * This function sends the direction to the server when the user presses an arrow key
+       * @param {event} event - The event that triggered the function
+       */
       if (event.keyCode === 37) {
         // LEFT arrow key
         sendDirection('LEFT');
@@ -116,9 +76,73 @@
       }
     });
 
+    // Add event listeners to the buttons
+    const startButton = document.getElementById("start-button");
+    startButton.addEventListener("click", startGame);
+
+    const applyParameters = document.getElementById("apply-parameters");
+    applyParameters.addEventListener("click", initGrid);
+
+
+    function initGrid() {
+      /**
+       This function initializes the grid with the input values, or the default values if there is no input, and sends the parameters to the server
+       */
+
+      let height = document.getElementById("height").value == "" ? 10 : parseInt(document.getElementById("height").value);
+      let width = document.getElementById("width").value == "" ? 10 : parseInt(document.getElementById("width").value);
+      let apples = document.getElementById("apples").value == "" ? 1 : parseInt(document.getElementById("apples").value);
+
+      gridContainer.innerHTML = ''; //clean all previous content
+
+      for (let i = 0; i < height; i++) {
+        let row = document.createElement('div');
+        row.style.lineHeight = '0';
+        for (let j = 0; j < width; j++) {
+          let square = document.createElement('div');
+          square.className = 'square';
+          square.setAttribute('id', 'square-' + i + '-' + j);
+          row.appendChild(square);
+        }
+        gridContainer.appendChild(row);
+      }
+      sendParams(height, width, apples);
+    }
+
+    initGrid(); //init the grid right away so that it appears when the page is loaded
+
+
+    function setSquareColor(row, col, color) {
+      /**
+       * This function sets the color of a square in the grid
+       * @param {number} row - The row of the square
+       * @param {number} col - The column of the square
+       * @param {string} color - The color of the square
+       */
+      let squareId = 'square-' + row + '-' + col;
+      let square = document.getElementById(squareId);
+      square.className = 'square ' + color;
+    }
+
+    
+    function getXmlHttpRequestObject(){
+      /**
+       * This function creates a new XMLHttpRequest object if it doesn't exist
+       * @returns {XMLHttpRequest} - The XMLHttpRequest object
+       */
+      if (!xhr) {
+        xhr = new XMLHttpRequest();
+      }
+      return xhr;
+    };
+
 
     function sendDirection(direction) {
-      var xhr = new XMLHttpRequest();
+      /**
+       * This function sends the direction to the server
+       * @param {string} direction - The direction to send
+       */
+      xhr = getXmlHttpRequestObject();
       xhr.open('POST', 'http://localhost:7000/direction', true);
       xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
       xhr.onreadystatechange = function () {
@@ -130,7 +154,13 @@
     }
 
     function sendParams(height, width, apples) {
-      var xhr = new XMLHttpRequest();
+      /**
+       * This function sends the parameters to the server
+       * @param {number} height - The height of the grid
+       * @param {number} width - The width of the grid
+       * @param {number} apples - The number of apples
+       */
+      xhr = getXmlHttpRequestObject();
       xhr.open('POST', 'http://localhost:7000/size', true);
       xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
       xhr.onreadystatechange = function () {
@@ -141,8 +171,11 @@
       xhr.send('height=' + height.toString() + '&width=' + width.toString() + '&apples=' + apples.toString());
     }
 
-    //updates the grid colors
+    
     function updateGrid() {
+      /**
+       * This function updates the grid colors based on the data received from the server
+       */
       xhr = getXmlHttpRequestObject();
       // Check if response is ready or not
       if (xhr.readyState == 4 && xhr.status == 200) {
@@ -150,9 +183,9 @@
         // Parse the JSON response
         var gridData = JSON.parse(xhr.responseText);
         // Update the grid colors based on the data
-        for (var i = 0; i < gridData.length; i++) {
-          for (var j = 0; j < gridData[i].length; j++) {
-            var squareColor;
+        for (let i = 0; i < gridData.length; i++) {
+          for (let j = 0; j < gridData[i].length; j++) {
+            let squareColor;
             if (gridData[i][j] == 0) {
               squareColor = 'empty'
             }
@@ -169,24 +202,26 @@
     }
 
     function getWinningStatus() {
-      console.log("Fetching winning status");
-      var xhr = new XMLHttpRequest();
+      /**
+       * This function gets the winning status from the server and updates it locally
+       */
+      let xhr = new XMLHttpRequest();
       xhr.open("GET", "http://localhost:7000/winning", true);
       xhr.onload = function() {
         if (xhr.status === 200) {
           console.log("Winning data received!");
-          var winningData = JSON.parse(xhr.responseText);
-          win = parseInt(winningData[0]);
-          lost = parseInt(winningData[1]);
-          console.log("win state="+win.toString())
-          console.log("lose state="+lost.toString())
+          let winningData = JSON.parse(xhr.responseText);
+          isGameWon = parseInt(winningData[0]);
+          isGameLost = parseInt(winningData[1]);
         }
       };
       xhr.send(null);
     }
     
     function fetchGrid() {
-      console.log("Updating the grid");
+      /**
+       * This function fetches the grid data from the server
+       */
       xhr = getXmlHttpRequestObject();
       xhr.onreadystatechange = updateGrid;
       // asynchronous requests
@@ -196,6 +231,9 @@
     }
 
     function initSnake() {
+      /**
+       * This function initializes the snake
+       */
       console.log("Initializing Snake");
       xhr = getXmlHttpRequestObject();
       xhr.open("GET", "http://localhost:7000/init", true);
@@ -203,21 +241,20 @@
       xhr.send(null);
     }
 
-    // Récupérer le bouton et ajouter un gestionnaire d'événements pour le clic
-    const startButton = document.getElementById("start-button");
-    startButton.addEventListener("click", startGame);
-
-    const applyParameters = document.getElementById("apply-parameters");
-    startButton.addEventListener("click", initGrid);
-
 
     function stopGame() {
+      /**
+       * This function stops the game by clearing the interval
+       */
       clearInterval(intervalID);
     }
 
     function gameIteration(){
+      /**
+       * This function is called every time the game iterates to make sure the game is not won or lost
+       */
       getWinningStatus();
-      if (win || lost) {
+      if (isGameWon || isGameLost) {
         stopGame();
         return;
       }
@@ -225,12 +262,16 @@
     }
 
     function startGame() {
+      /**
+       * This function starts the game by initializing the snake and setting the interval
+       */
       stopGame();
       initSnake();
-      win = 0;
-      lost = 0;
+      isGameWon = 0;
+      isGameLost = 0;
       intervalID = setInterval(gameIteration, 500);
     }
+
 
   </script>
 
