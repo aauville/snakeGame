@@ -1,7 +1,8 @@
 Snake Game
 
 This is a simple implementation of the classic Snake Game using Python, Flask, HTML, and JavaScript.
-Requirements
+
+Requirements:
 
     python3
     numpy
@@ -9,7 +10,7 @@ Requirements
     flask_cors
     
 
-How to Run
+How to Run:
 
     Clone the repository to your local machine with 'git clone https://github.com/aauville/snakeGame.git'
 
@@ -21,11 +22,11 @@ How to Run
 
     Sometimes the server displays a black screen for unknown reasons, in this case you can open directly the index.html file after lauching the server and it should work fine
 
-How to Play
+How to Play:
 
 Use the arrow keys on your keyboard to control the snake. The objective of the game is to eat as many apples as possible without colliding with the walls or your own body. Each time the snake eats an apple, its length increases.
 
-Limits of the Code
+Limits of the Code:
 
     The game currently only has one level and does not have any difficulty settings.
 
@@ -40,7 +41,7 @@ Limits of the Code
 
 
 
-To Improve
+To Improve:
 
     Add different difficulty levels or a progressive difficulty system to make the game more challenging.
 
