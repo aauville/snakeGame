@@ -17,7 +17,9 @@ How to Run
 
     Run the app.py file using python3 app.py
 
-    Open localhost:5000 in your web browser
+    Open localhost:7000 in your web browser
+
+    Sometimes the server displays a black screen for unknown reasons, in this case you can open directly the index.html file after lauching the server and it should work fine
 
 How to Play
 
@@ -34,6 +36,8 @@ Limits of the Code
     The game does not have a 'Game Over' screen
 
     The game gets stuck in an infinite loop when the snake reaches the maximum size because a new apple can't be generated in the grid
+
+
 
 
 To Improve
