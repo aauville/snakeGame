@@ -1,0 +1,239 @@
+<html>
+
+<head>
+  <style>
+    /* Définir la taille et la couleur de fond des carrés */
+    .square {
+      width: 50px;
+      height: 50px;
+      background-color: #000000;
+      border: 1px solid #333;
+      display: inline-block;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Définir la couleur de fond des carrés colorés */
+    .apple {
+      background-color: red;
+    }
+
+    .snake {
+      background-color: green;
+    }
+
+    .empty {
+      background-color: black;
+    }
+  </style>
+</head>
+
+<header>
+  <title>Snake Game</title>
+</header>
+
+<body>
+  <div id="grid-container"></div>
+
+  <button id="start-button">Start Game</button>
+
+  <label for="height">Height: </label>
+  <input type="number" id="height" name="height">
+
+  <label for="width">Width: </label>
+  <input type="number" id="width" name="width">
+
+  <label for="apples">Number of apples: </label>
+  <input type="number" id="apples" name="apples">
+
+  <button id="apply-parameters">Apply parameters</button>
+
+  <script>
+
+    var n = 10; // number of columns
+    var m = 10; // number of ligns
+    var xhr = null;
+    var gridContainer = document.getElementById('grid-container');
+    var win = 0;
+    var lost = 0;
+    var intervalID=0;
+
+
+    function initGrid() {
+      var height = document.getElementById("height").value == "" ? 10 : parseInt(document.getElementById("height").value);
+      var width = document.getElementById("width").value == "" ? 10 : parseInt(document.getElementById("width").value);
+      var apples = document.getElementById("width").value == "" ? 1 : parseInt(document.getElementById("apples").value);
+
+      gridContainer.innerHTML = ''; //clean all previous content
+
+      for (var i = 0; i < height; i++) {
+        var row = document.createElement('div');
+        row.style.lineHeight = '0';
+        for (var j = 0; j < width; j++) {
+          var square = document.createElement('div');
+          square.className = 'square';
+          square.setAttribute('id', 'square-' + i + '-' + j);
+          row.appendChild(square);
+        }
+        gridContainer.appendChild(row);
+      }
+      sendParams(height, width, apples);
+    }
+
+    initGrid(); //init the grid so that it appears when the page is loaded
+
+    // Changer la couleur d'un carré en utilisant sa classe CSS
+    function setSquareColor(row, col, color) {
+      var squareId = 'square-' + row + '-' + col;
+      var square = document.getElementById(squareId);
+      square.className = 'square ' + color;
+    }
+
+    //returns the request object if it exists, creates it if not
+    getXmlHttpRequestObject = function () {
+      if (!xhr) {
+        // Create a new XMLHttpRequest object 
+        xhr = new XMLHttpRequest();
+      }
+      return xhr;
+    };
+
+
+    //add event listener for the key controls
+    document.addEventListener('keydown', function (event) {
+      if (event.keyCode === 37) {
+        // LEFT arrow key
+        sendDirection('LEFT');
+      } else if (event.keyCode === 38) {
+        // UP arrow key
+        sendDirection('UP');
+      } else if (event.keyCode === 39) {
+        // RIGHT arrow key
+        sendDirection('RIGHT');
+      } else if (event.keyCode === 40) {
+        // DOWN arrow key
+        sendDirection('DOWN');
+      }
+    });
+
+
+    function sendDirection(direction) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', 'http://localhost:7000/direction', true);
+      xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+          console.log("xhr.responseText");
+        }
+      };
+      xhr.send('direction=' + direction);
+    }
+
+    function sendParams(height, width, apples) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', 'http://localhost:7000/size', true);
+      xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+          console.log("xhr.responseText");
+        }
+      };
+      xhr.send('height=' + height.toString() + '&width=' + width.toString() + '&apples=' + apples.toString());
+    }
+
+    //updates the grid colors
+    function updateGrid() {
+      xhr = getXmlHttpRequestObject();
+      // Check if response is ready or not
+      if (xhr.readyState == 4 && xhr.status == 200) {
+        console.log("Grid data received!");
+        // Parse the JSON response
+        var gridData = JSON.parse(xhr.responseText);
+        // Update the grid colors based on the data
+        for (var i = 0; i < gridData.length; i++) {
+          for (var j = 0; j < gridData[i].length; j++) {
+            var squareColor;
+            if (gridData[i][j] == 0) {
+              squareColor = 'empty'
+            }
+            else if (gridData[i][j] == 1) {
+              squareColor = 'snake'
+            }
+            else if (gridData[i][j] == 2) {
+              squareColor = 'apple'
+            }
+            setSquareColor(i, j, squareColor);
+          }
+        }
+      }
+    }
+
+    function getWinningStatus() {
+      console.log("Fetching winning status");
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "http://localhost:7000/winning", true);
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          console.log("Winning data received!");
+          var winningData = JSON.parse(xhr.responseText);
+          win = parseInt(winningData[0]);
+          lost = parseInt(winningData[1]);
+          console.log("win state="+win.toString())
+          console.log("lose state="+lost.toString())
+        }
+      };
+      xhr.send(null);
+    }
+    
+    function fetchGrid() {
+      console.log("Updating the grid");
+      xhr = getXmlHttpRequestObject();
+      xhr.onreadystatechange = updateGrid;
+      // asynchronous requests
+      xhr.open("GET", "http://localhost:7000/grid", true);
+      // Send the request over the network
+      xhr.send(null);
+    }
+
+    function initSnake() {
+      console.log("Initializing Snake");
+      xhr = getXmlHttpRequestObject();
+      xhr.open("GET", "http://localhost:7000/init", true);
+      xhr.onreadystatechange = fetchGrid;
+      xhr.send(null);
+    }
+
+    // Récupérer le bouton et ajouter un gestionnaire d'événements pour le clic
+    const startButton = document.getElementById("start-button");
+    startButton.addEventListener("click", startGame);
+
+    const applyParameters = document.getElementById("apply-parameters");
+    startButton.addEventListener("click", initGrid);
+
+
+    function stopGame() {
+      clearInterval(intervalID);
+    }
+
+    function gameIteration(){
+      getWinningStatus();
+      if (win || lost) {
+        stopGame();
+        return;
+      }
+      fetchGrid();
+    }
+
+    function startGame() {
+      stopGame();
+      initSnake();
+      win = 0;
+      lost = 0;
+      intervalID = setInterval(gameIteration, 500);
+    }
+
+  </script>
+
+</body>
+
+</html>
