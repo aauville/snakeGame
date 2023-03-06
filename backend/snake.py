@@ -24,6 +24,7 @@ height = 10
 width = 10
 number_of_apples = 1
 
+# functions used to return the coordinates of the neighbors
 
 def up_neighbor_coordinates(box: "tuple[int, int]"):
     return (box[0] - 1, box[1])
@@ -69,7 +70,6 @@ class Snake:
         self.lost_status: int = 0  # 0 if game currently running, 1 if game lost
         self.direction: int = UP  # initial direction
 
-    # functions used to return the coordinates of the neighbors
 
     def get_snake_head_coordinates(self):
         return self.snake_body_coordinates[0]
